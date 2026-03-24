@@ -1,73 +1,72 @@
 package servicio;
 
-import modelo.Vehiculo;
-import modelo.EspacioParqueadero;
-import modelo.Usuario;
-import modelo.Tarifa;
+import enums.TipoEspacio;
+import enums.TipoVehiculo;
+import excepciones.PlacaDuplicadaException;
+import excepciones.SinEspaciosException;
+import excepciones.VehiculoNoEncontradoException;
 import java.util.ArrayList;
+import modelo.EspacioParqueadero;
+import modelo.Tarifa;
+import modelo.Vehiculo;
 
 public class ParqueaderoService {
 
-    // LISTAS - aquí se guardan todos los datos del parqueadero
     private ArrayList<Vehiculo> vehiculos;
     private ArrayList<EspacioParqueadero> espacios;
-    private ArrayList<Usuario> usuarios;
     private ArrayList<Tarifa> tarifas;
 
-    // CONSTRUCTOR - inicializa las listas y carga datos base
     public ParqueaderoService() {
         vehiculos = new ArrayList<>();
         espacios  = new ArrayList<>();
-        usuarios  = new ArrayList<>();
         tarifas   = new ArrayList<>();
         inicializarEspacios();
         inicializarTarifas();
     }
 
-    // Crea los espacios del parqueadero al arrancar
     private void inicializarEspacios() {
-        espacios.add(new EspacioParqueadero("A1", "Carro"));
-        espacios.add(new EspacioParqueadero("A2", "Carro"));
-        espacios.add(new EspacioParqueadero("A3", "Carro"));
-        espacios.add(new EspacioParqueadero("B1", "Moto"));
-        espacios.add(new EspacioParqueadero("B2", "Moto"));
-        espacios.add(new EspacioParqueadero("C1", "Bicicleta"));
-        espacios.add(new EspacioParqueadero("C2", "Bicicleta"));
+        espacios.add(new EspacioParqueadero("A1", TipoEspacio.CARRO));
+        espacios.add(new EspacioParqueadero("A2", TipoEspacio.CARRO));
+        espacios.add(new EspacioParqueadero("A3", TipoEspacio.CARRO));
+        espacios.add(new EspacioParqueadero("B1", TipoEspacio.MOTO));
+        espacios.add(new EspacioParqueadero("B2", TipoEspacio.MOTO));
+        espacios.add(new EspacioParqueadero("C1", TipoEspacio.BICICLETA));
+        espacios.add(new EspacioParqueadero("C2", TipoEspacio.BICICLETA));
     }
+private void inicializarTarifas() {
+    tarifas.add(new Tarifa("CARRO",     3000.0));
+    tarifas.add(new Tarifa("MOTO",      2000.0));
+    tarifas.add(new Tarifa("BICICLETA", 500.0));
+}
+   
 
-    // Crea las tarifas base al arrancar
-    private void inicializarTarifas() {
-        tarifas.add(new Tarifa("Carro",      3000.0));
-        tarifas.add(new Tarifa("Moto",       2000.0));
-        tarifas.add(new Tarifa("Bicicleta",  500.0));
-    }
-
-    // ─── REGISTRAR INGRESO ───────────────────────────────────────
-    public String registrarIngreso(String placa, String tipoVehiculo,
+    // REGISTRAR INGRESO - ahora lanza excepciones
+    public String registrarIngreso(String placa, TipoVehiculo tipoVehiculo,
                                    String nombreConductor, String identificacion,
-                                   String horaIngreso) {
-        // 1. Verificar que la placa no esté ya adentro
+                                   String horaIngreso)
+            throws PlacaDuplicadaException, SinEspaciosException {
+
+        // Verificar placa duplicada
         for (Vehiculo v : vehiculos) {
             if (v.getPlaca().equals(placa) && v.getEstado().equals("dentro")) {
-                return "ERROR: La placa " + placa + " ya está en el parqueadero.";
+                throw new PlacaDuplicadaException(placa);
             }
         }
 
-        // 2. Buscar un espacio disponible para ese tipo de vehículo
+        // Buscar espacio disponible
         EspacioParqueadero espacioLibre = null;
         for (EspacioParqueadero e : espacios) {
-            if (e.getTipoEspacio().equals(tipoVehiculo) && e.estaDisponible()) {
+            if (e.getTipoEspacio().toString().equals(tipoVehiculo.toString())
+                    && e.estaDisponible()) {
                 espacioLibre = e;
                 break;
             }
         }
 
-        // 3. Si no hay espacio, avisamos
         if (espacioLibre == null) {
-            return "ERROR: No hay espacios disponibles para " + tipoVehiculo;
+            throw new SinEspaciosException(tipoVehiculo.toString());
         }
 
-        // 4. Registrar el vehículo y ocupar el espacio
         Vehiculo nuevo = new Vehiculo(placa, tipoVehiculo, nombreConductor,
                                       identificacion, horaIngreso,
                                       espacioLibre.getCodigo());
@@ -78,9 +77,10 @@ public class ParqueaderoService {
         return "Ingreso exitoso. Espacio asignado: " + espacioLibre.getCodigo();
     }
 
-    // ─── REGISTRAR SALIDA ────────────────────────────────────────
-    public String registrarSalida(String placa, String horaSalida) {
-        // 1. Buscar el vehículo adentro
+    // REGISTRAR SALIDA - ahora lanza excepciones
+    public String registrarSalida(String placa, String horaSalida)
+            throws VehiculoNoEncontradoException {
+
         Vehiculo vehiculoEncontrado = null;
         for (Vehiculo v : vehiculos) {
             if (v.getPlaca().equals(placa) && v.getEstado().equals("dentro")) {
@@ -89,19 +89,14 @@ public class ParqueaderoService {
             }
         }
 
-        // 2. Si no existe, avisamos
         if (vehiculoEncontrado == null) {
-            return "ERROR: No se encontró el vehículo con placa " + placa;
+            throw new VehiculoNoEncontradoException(placa);
         }
 
-        // 3. Calcular horas (simple por ahora)
         double horas = calcularHoras(vehiculoEncontrado.getHoraIngreso(), horaSalida);
-
-        // 4. Buscar tarifa según tipo de vehículo
-        Tarifa tarifa = buscarTarifa(vehiculoEncontrado.getTipoVehiculo());
+        Tarifa tarifa = buscarTarifa(vehiculoEncontrado.getTipoVehiculo().toString());
         double total = tarifa.calcularCobro(horas, 0.0);
 
-        // 5. Liberar el espacio
         for (EspacioParqueadero e : espacios) {
             if (e.getCodigo().equals(vehiculoEncontrado.getEspacioAsignado())) {
                 e.setEstado("disponible");
@@ -110,7 +105,6 @@ public class ParqueaderoService {
             }
         }
 
-        // 6. Marcar vehículo como salido
         vehiculoEncontrado.setEstado("salio");
 
         return "Salida registrada." +
@@ -118,15 +112,13 @@ public class ParqueaderoService {
                "\nTotal a pagar: $" + total;
     }
 
-    // ─── MÉTODOS DE APOYO ────────────────────────────────────────
     private double calcularHoras(String horaIngreso, String horaSalida) {
-        // Formato esperado: "HH:MM"
         String[] inicio = horaIngreso.split(":");
         String[] fin    = horaSalida.split(":");
         int minInicio = Integer.parseInt(inicio[0]) * 60 + Integer.parseInt(inicio[1]);
         int minFin    = Integer.parseInt(fin[0])    * 60 + Integer.parseInt(fin[1]);
         double minutos = minFin - minInicio;
-        return Math.round((minutos / 60.0) * 10.0) / 10.0; // redondea a 1 decimal
+        return Math.round((minutos / 60.0) * 10.0) / 10.0;
     }
 
     private Tarifa buscarTarifa(String tipoVehiculo) {
@@ -138,7 +130,6 @@ public class ParqueaderoService {
         return new Tarifa(tipoVehiculo, 0.0);
     }
 
-    // ─── CONSULTAS ───────────────────────────────────────────────
     public void mostrarVehiculosDentro() {
         System.out.println("\n=== Vehículos en el parqueadero ===");
         boolean hayVehiculos = false;

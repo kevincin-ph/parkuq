@@ -1,47 +1,43 @@
 package modelo;
 
+import enums.TipoUsuario;
+
 public class Usuario {
 
-    // ATRIBUTOS
     private String nombre;
     private String identificacion;
-    private String tipoUsuario;   // "Estudiante", "Docente", "Administrativo", "Visitante"
-    private double descuento;     // Ej: 0.10 = 10% de descuento
+    private TipoUsuario tipoUsuario;
+    private double descuento;
 
-    // CONSTRUCTOR
-    public Usuario(String nombre, String identificacion, String tipoUsuario) {
+    public Usuario(String nombre, String identificacion, TipoUsuario tipoUsuario) {
         this.nombre = nombre;
         this.identificacion = identificacion;
         this.tipoUsuario = tipoUsuario;
-        this.descuento = asignarDescuento(tipoUsuario); // se asigna automático
+        this.descuento = asignarDescuento(tipoUsuario);
     }
 
-    // MÉTODO PRIVADO - asigna descuento según tipo
-    private double asignarDescuento(String tipo) {
-        if (tipo.equals("Estudiante")) {
-            return 0.10;       // 10% descuento
-        } else if (tipo.equals("Docente")) {
-            return 0.20;       // 20% descuento
-        } else if (tipo.equals("Administrativo")) {
-            return 0.15;       // 15% descuento
+    private double asignarDescuento(TipoUsuario tipo) {
+        if (tipo == TipoUsuario.ESTUDIANTE) {
+            return 0.10;
+        } else if (tipo == TipoUsuario.DOCENTE) {
+            return 0.20;
+        } else if (tipo == TipoUsuario.ADMINISTRATIVO) {
+            return 0.15;
         } else {
-            return 0.0;        // Visitante, sin descuento
+            return 0.0;
         }
     }
 
-    // GETTERS
     public String getNombre() { return nombre; }
     public String getIdentificacion() { return identificacion; }
-    public String getTipoUsuario() { return tipoUsuario; }
+    public TipoUsuario getTipoUsuario() { return tipoUsuario; }
     public double getDescuento() { return descuento; }
 
-    // SETTER
-    public void setTipoUsuario(String tipoUsuario) {
+    public void setTipoUsuario(TipoUsuario tipoUsuario) {
         this.tipoUsuario = tipoUsuario;
-        this.descuento = asignarDescuento(tipoUsuario); // actualiza el descuento
+        this.descuento = asignarDescuento(tipoUsuario);
     }
 
-    // MOSTRAR INFO
     @Override
     public String toString() {
         return "Usuario: " + nombre +
