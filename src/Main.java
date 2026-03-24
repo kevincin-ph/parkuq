@@ -1,54 +1,41 @@
-import enums.TipoVehiculo;
+import enums.TipoUsuario;
+import modelo.Usuario;
 import servicio.ParqueaderoService;
+import servicio.UsuarioService;
+
 
 public class Main {
     public static void main(String[] args) {
 
         ParqueaderoService parqueadero = new ParqueaderoService();
-
+// PRUEBA UsuarioService
+        System.out.println("\n=============================");
+        System.out.println("  PRUEBA USUARIOS");
         System.out.println("=============================");
-        System.out.println("  BIENVENIDO AL PARKUQ");
-        System.out.println("=============================");
 
-        // PRUEBA 1: Espacios al inicio
-        System.out.println("\n--- ESPACIOS AL INICIO ---");
-        parqueadero.mostrarEspaciosDisponibles();
+        UsuarioService usuarioService = new UsuarioService();
 
-        // PRUEBA 2: Ingresos con try/catch
-        System.out.println("\n--- REGISTRANDO INGRESOS ---");
-        try {
-            System.out.println(parqueadero.registrarIngreso(
-                "ABC123", TipoVehiculo.CARRO, "Juan Pérez", "1234567", "08:00"));
+        // Mostrar todos
+        usuarioService.mostrarUsuarios();
 
-            System.out.println(parqueadero.registrarIngreso(
-                "XYZ789", TipoVehiculo.MOTO, "María López", "7654321", "08:30"));
-
-            // Placa duplicada - lanzará excepción
-            System.out.println(parqueadero.registrarIngreso(
-                "ABC123", TipoVehiculo.CARRO, "Juan Pérez", "1234567", "09:00"));
-
-        } catch (Exception e) {
-            System.out.println("EXCEPCION CAPTURADA: " + e.getMessage());
+        // Buscar uno específico
+        System.out.println("\n--- BUSCANDO USUARIO 1002 ---");
+        Usuario u = usuarioService.buscarUsuario("1002");
+        if (u != null) {
+            System.out.println("Encontrado: " + u);
+            System.out.println("Su descuento es: " + (u.getDescuento() * 100) + "%");
         }
 
-        // PRUEBA 3: Vehículos adentro
-        System.out.println("\n--- VEHÍCULOS ADENTRO ---");
-        parqueadero.mostrarVehiculosDentro();
+        // Registrar uno nuevo
+        System.out.println("\n--- REGISTRANDO NUEVO USUARIO ---");
+        System.out.println(usuarioService.registrarUsuario(
+            "Kevin Dev", "9999", TipoUsuario.ESTUDIANTE));
 
-        // PRUEBA 4: Salida
-        System.out.println("\n--- REGISTRANDO SALIDA ---");
-        try {
-            System.out.println(parqueadero.registrarSalida("ABC123", "10:30"));
+        // Intentar duplicado
+        System.out.println(usuarioService.registrarUsuario(
+            "Otro Kevin", "9999", TipoUsuario.DOCENTE));
 
-            // Vehículo que no existe - lanzará excepción
-            System.out.println(parqueadero.registrarSalida("ZZZ999", "10:30"));
-
-        } catch (Exception e) {
-            System.out.println("EXCEPCION CAPTURADA: " + e.getMessage());
-        }
-
-        // PRUEBA 5: Espacios después
-        System.out.println("\n--- ESPACIOS DESPUÉS DE SALIDA ---");
-        parqueadero.mostrarEspaciosDisponibles();
+        // Ver solo docentes
+        usuarioService.mostrarUsuariosPorTipo(TipoUsuario.DOCENTE);
     }
 }
