@@ -33,27 +33,24 @@ public class ParqueaderoService {
         espacios.add(new EspacioParqueadero("C1", TipoEspacio.BICICLETA));
         espacios.add(new EspacioParqueadero("C2", TipoEspacio.BICICLETA));
     }
-private void inicializarTarifas() {
-    tarifas.add(new Tarifa("CARRO",     3000.0));
-    tarifas.add(new Tarifa("MOTO",      2000.0));
-    tarifas.add(new Tarifa("BICICLETA", 500.0));
-}
-   
 
-    // REGISTRAR INGRESO - ahora lanza excepciones
+    private void inicializarTarifas() {
+        tarifas.add(new Tarifa("CARRO",     3000.0));
+        tarifas.add(new Tarifa("MOTO",      2000.0));
+        tarifas.add(new Tarifa("BICICLETA", 500.0));
+    }
+
     public String registrarIngreso(String placa, TipoVehiculo tipoVehiculo,
                                    String nombreConductor, String identificacion,
                                    String horaIngreso)
             throws PlacaDuplicadaException, SinEspaciosException {
 
-        // Verificar placa duplicada
         for (Vehiculo v : vehiculos) {
             if (v.getPlaca().equals(placa) && v.getEstado().equals("dentro")) {
                 throw new PlacaDuplicadaException(placa);
             }
         }
 
-        // Buscar espacio disponible
         EspacioParqueadero espacioLibre = null;
         for (EspacioParqueadero e : espacios) {
             if (e.getTipoEspacio().toString().equals(tipoVehiculo.toString())
@@ -77,7 +74,6 @@ private void inicializarTarifas() {
         return "Ingreso exitoso. Espacio asignado: " + espacioLibre.getCodigo();
     }
 
-    // REGISTRAR SALIDA - ahora lanza excepciones
     public String registrarSalida(String placa, String horaSalida)
             throws VehiculoNoEncontradoException {
 
@@ -117,6 +113,7 @@ private void inicializarTarifas() {
         String[] fin    = horaSalida.split(":");
         int minInicio = Integer.parseInt(inicio[0]) * 60 + Integer.parseInt(inicio[1]);
         int minFin    = Integer.parseInt(fin[0])    * 60 + Integer.parseInt(fin[1]);
+        if (minFin < minInicio) minFin += 24 * 60;
         double minutos = minFin - minInicio;
         return Math.round((minutos / 60.0) * 10.0) / 10.0;
     }
@@ -149,5 +146,13 @@ private void inicializarTarifas() {
                 System.out.println(e);
             }
         }
+    }
+
+    public ArrayList<Vehiculo> getVehiculos() {
+        return vehiculos;
+    }
+
+    public ArrayList<EspacioParqueadero> getEspacios() {
+        return espacios;
     }
 }
